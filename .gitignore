@@ -1,0 +1,7 @@
+# for macOS
+**/*.icloud
+**/.DS_Store
+
+# for JetBrain
+.idea
+**/__pycache__
