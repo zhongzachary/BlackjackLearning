@@ -60,6 +60,8 @@ def get_legal_best_action(strategy: pd.DataFrame, dealer_open: BJCard, player_ha
     for action in best_actions:
         if action in legal_actions:
             return action
+    if len(best_actions) == 1 and best_actions[0] is BJAction.DOUBLE_DOWN:
+        return
     if player_hand.name[0] == 'P':
         return get_legal_best_action(strategy, dealer_open, player_hand.to_non_pair(), legal_actions)
     else:
@@ -105,11 +107,11 @@ def run_monte_carlo(strategy: pd.DataFrame, num_rounds=10000):
 
 if __name__ == '__main__':
     # using mc to confirm result from probability analysis
-    transition_2_cards_monte_carlo(save_csv_as='../out/mc_2_to_many.csv')
-    dealer_monte_carlo(save_csv_as='../out/mc_dealer_s17.csv')
-    dealer_monte_carlo(stand_if_reach=18, save_csv_as='../out/mc_dealer_h17.csv')
+    # transition_2_cards_monte_carlo(save_csv_as='../out/mc_2_to_many.csv')
+    # dealer_monte_carlo(save_csv_as='../out/mc_dealer_s17.csv')
+    # dealer_monte_carlo(stand_if_reach=18, save_csv_as='../out/mc_dealer_h17.csv')
 
-    # my_strategy = read_strategy('../tables/basic_strategy.csv')
+    my_strategy = read_strategy('../out/basic_strategy.csv')
     exp_strategy = read_strategy('../resources/basic_strategy_reference.csv')
     # strategy_diff(actual=my_strategy, expected=exp_strategy, save_csv_as='../tables/basic_strategy_diff.csv')
-    run_monte_carlo(exp_strategy)
+    run_monte_carlo(my_strategy)

@@ -1,10 +1,12 @@
 import functools
 import json
+import logging
 import random
 from collections import deque
 from enum import Enum, unique
 from typing import List, Tuple, Dict, Union
 
+logging.basicConfig(filename='blackjack.log',  filemode='w', level=logging.INFO)
 
 class BJCard(Enum):
     """
@@ -608,6 +610,7 @@ class Blackjack:
         self.curr_dealing_hand = 0
         self.dealer_open = self.deck.draw()
         self.dealer_hand = BJHand(self.dealer_open, self.deck.draw())
+        logging.info('Current round #: {}. Dealer: {}'.format(self.round_elapsed, BJHandState.of_ignore_pair(self.dealer_hand)))
 
     def get_legal_actions(self):
         """
@@ -743,14 +746,19 @@ class Blackjack:
         >>> bj.take_action(BJAction.NO_ACTION)
         ([3, "BJ", ["P20"]], -1)
         """
+        logging.info('Stage: {}, Player: {}, Current: {}, Attempt: {}'
+                     .format(self.stage, [BJHandState.of(h) for h in self.player_hands], self.curr_dealing_hand, action))
+
         illegal_action_penalty = -100
         if action not in self.get_legal_actions():
+            logging.warning('Illegal action')
             return self.get_game_state(), illegal_action_penalty
 
-        reward: float = 0
-
         if action == BJAction.SURRENDER:
+            logging.info('Stage: {}'.format(self.stage))
             return self._handle_surrender(), -0.5
+
+        reward: float = 0
 
         if action == BJAction.INSURANCE:
             reward += 1 if self.dealer_hand.is_blackjack() else -0.5
@@ -764,10 +772,12 @@ class Blackjack:
                     self.stage = self.stage.get_next_stage()
                 else:
                     self.stage = BJStage.DEALING_PLAYER
-            return self.get_game_state(), reward
         elif self.stage == BJStage.DEALING_PLAYER:
             reward = self._handle_regular_actions(action)
-            return self.get_game_state(), reward
+        logging.info('Stage: {}, Dealer: {}, Player: {}, Current: {}, Reward: {}'
+                     .format(self.stage, BJHandState.of(self.dealer_hand),
+                             [BJHandState.of(h) for h in self.player_hands], self.curr_dealing_hand, reward))
+        return self.get_game_state(), reward
 
     def is_round_ended(self) -> bool:
         """
